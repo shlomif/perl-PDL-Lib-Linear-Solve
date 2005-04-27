@@ -1,0 +1,197 @@
+$VERSION = '0.002';
+
+pp_addpm({ At => 'Top'}, << 'EOD');
+
+=head1 NAME
+
+PDL::Lib::Linear::Solve -- Linear Equations Set Solution or Matrix Inversion
+using Hard-Coded Routines
+
+=head1 SYNOPSIS
+
+    use PDL;
+    use PDL::Lib::Linear::Solve;
+
+    my $coeffs = pdl([[1,1],[0,1]]);
+    my $values = pdl([[5],[2]]);
+    my ($new_coeffs, $new_values) = linear_solve($coeffs, $values);
+
+=head1 DESCRIPTION
+
+This package provides routines for solving a set of linear equations and
+inverting a matrix using hard-coded routines written in C.
+
+=cut
+EOD
+
+pp_addpm({At => 'Bot'}, << 'EOD');
+
+=head1 AUTHOR
+
+Copyright (C) 2003 Shlomi Fish. There is no warranty. You are allowed
+to redistribute this software / documentation under certain
+conditions. For details, see the file COPYING in the PDL
+distribution. If this file is separated from the PDL distribution,
+the copyright notice should be included in the file.
+
+=cut
+
+EOD
+
+pp_def(
+    'linear_solve',
+    'Pars' => 'in_coeffs(incols,inrows); in_values(valcols,inrows); [o]coeffs(incols,inrows) ; [o]values(valcols,inrows);',
+    Code => << 'EOF' ,
+int mr, mc, i,j,col,try, valcols_size;
+$GENERIC() temp;
+$GENERIC() f;
+mr = $SIZE(inrows);
+mc = $SIZE(incols);
+valcols_size = $SIZE(valcols);
+for(i=0;i<mr;i++)
+{
+    for(col=0;col<mc;col++)
+    {
+        $coeffs(inrows => i,incols => col) =
+            $in_coeffs(inrows => i,incols => col);
+    }
+    for(col=0;col<valcols_size;col++)
+    {
+        $values(inrows => i,valcols => col) =
+            $in_values(inrows => i,valcols => col);
+    }
+}
+if (mr != mc)
+{
+    return;
+}
+for(i=0;i<mr;i++)
+{
+    try=i;
+    while($coeffs(incols => i, inrows => try) == 0)
+    {
+        try++;
+        if (try >= mr)
+        {
+            break;
+        }
+    }
+    if (try >= mr)
+    {
+        break;
+    }
+    /* Swap i and try */
+    for(col=0;col<mc;col++)
+    {
+        temp = $coeffs(inrows => i, incols => col);
+        $coeffs(inrows => i, incols => col) = $coeffs(inrows => try, incols => col);
+        $coeffs(inrows => try, incols => col) = temp;
+    }
+    for(col=0;col<valcols_size;col++)
+    {
+        temp = $values(inrows => i, valcols => col);
+        $values(inrows => i, valcols => col) = $values(inrows => try, valcols => col);
+        $values(inrows => try, valcols => col) = temp;        
+    }
+
+    f = 1 / $coeffs(inrows => i, incols => i);
+    for(col=0;col<mc;col++)
+    {
+        $coeffs(inrows => i, incols => col) *= f;
+    }
+    for(col=0;col<valcols_size;col++)
+    {
+        $values(inrows => i, valcols => col) *= f;
+    }
+
+    for(j=0;j<mr;j++)
+    {
+        if (i == j)
+        {
+            continue;
+        }
+        f = $coeffs(incols => i, inrows => j);
+        for(col=0;col<mc;col++)
+        {
+            $coeffs(incols => col, inrows => j) -= 
+                $coeffs(incols => col, inrows => i) * f;
+        }
+        for(col=0;col<valcols_size;col++)
+        {
+            $values(valcols => col, inrows => j) -= 
+                $values(valcols => col, inrows => i) * f;
+        }
+    }
+}
+EOF
+    Doc => <<'EOF',
+=for ref
+
+C<linear_solve> provides a solving algorithm for a set of linear equations.
+
+=for example
+
+    ($result_coeffs, $result_values) = linear_solve($coeffs, $values);
+    
+C<linear_solve> accepts two arguments - a square matrix representing the linear
+equation coefficients, and a tensors that contains their values. As a result
+it produces a matrix with the final coefficients (an identity matrix if 
+the coefficients form a regular matrix), and the final values.
+
+=cut
+
+EOF
+);
+
+my $rejects =  <<'EOF';
+loop(inrows) %{
+    loop(incols) %{
+        $coeffs() = $in_coeffs();
+    %}
+    loop(valcols) %{
+        $values() = $in_values();
+    %}
+%}
+EOF
+
+pp_addpm(<<'EOF');
+
+sub eye
+{
+    my $n = shift;
+    my $pdl = zeroes($n,$n);
+    $pdl->diagonal(0,1)++;
+    return $pdl;
+}
+
+sub myinv
+{
+    my $matrix = shift;
+    my @dims = dims($matrix);    
+    my $I = eye($dims[0]);
+    my ($out_coeffs, $out_values) = linear_solve($matrix, $I);
+    return $out_values;
+}
+
+=head2 myinv
+
+=for ref
+
+Inverts a matrix
+
+=for usage
+
+    $inverted_matrix = inv($matrix);
+
+=for example
+
+    $inverted_matrix = inv($matrix);
+
+=cut
+EOF
+
+pp_add_exported('', 'myinv');
+
+pp_done();
+
+
