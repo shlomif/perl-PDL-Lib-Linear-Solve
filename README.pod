@@ -1,0 +1,9 @@
+=encoding utf8
+
+=head1 PDL-Lib-Linear-Solve
+
+Solves a series of linear equations using PDL ( L<http://pdl.perl.org/> ).
+
+An extension written in C.
+
+=cut
