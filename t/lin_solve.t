@@ -86,7 +86,7 @@ my @inv_tests =
     },
     {
         'in_mat' => [[1,2,3],[4,5,6],[-100,2,100]],
-    },    
+    },
 );
 
 if (scalar(@inv_tests) != NUM_INV_TESTS)

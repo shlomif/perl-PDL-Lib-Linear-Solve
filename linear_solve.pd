@@ -91,7 +91,7 @@ for(i=0;i<mr;i++)
     {
         temp = $values(inrows => i, valcols => col);
         $values(inrows => i, valcols => col) = $values(inrows => try, valcols => col);
-        $values(inrows => try, valcols => col) = temp;        
+        $values(inrows => try, valcols => col) = temp;
     }
 
     f = 1 / $coeffs(inrows => i, incols => i);
@@ -113,12 +113,12 @@ for(i=0;i<mr;i++)
         f = $coeffs(incols => i, inrows => j);
         for(col=0;col<mc;col++)
         {
-            $coeffs(incols => col, inrows => j) -= 
+            $coeffs(incols => col, inrows => j) -=
                 $coeffs(incols => col, inrows => i) * f;
         }
         for(col=0;col<valcols_size;col++)
         {
-            $values(valcols => col, inrows => j) -= 
+            $values(valcols => col, inrows => j) -=
                 $values(valcols => col, inrows => i) * f;
         }
     }
@@ -132,10 +132,10 @@ C<linear_solve> provides a solving algorithm for a set of linear equations.
 =for example
 
     ($result_coeffs, $result_values) = linear_solve($coeffs, $values);
-    
+
 C<linear_solve> accepts two arguments - a square matrix representing the linear
 equation coefficients, and a tensors that contains their values. As a result
-it produces a matrix with the final coefficients (an identity matrix if 
+it produces a matrix with the final coefficients (an identity matrix if
 the coefficients form a regular matrix), and the final values.
 
 =cut
@@ -167,7 +167,7 @@ sub eye
 sub myinv
 {
     my $matrix = shift;
-    my @dims = dims($matrix);    
+    my @dims = dims($matrix);
     my $I = eye($dims[0]);
     my ($out_coeffs, $out_values) = linear_solve($matrix, $I);
     return $out_values;

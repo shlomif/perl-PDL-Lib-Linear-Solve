@@ -4,4 +4,5 @@ Makefile.PL
 linear_solve.pd
 mytest.pl
 t/lin_solve.t
+t/style-trailing-space.t
 META.yml                                 Module meta-data (added by MakeMaker)
