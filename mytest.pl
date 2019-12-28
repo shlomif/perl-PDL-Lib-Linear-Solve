@@ -9,7 +9,7 @@ sub eye
 {
     my $n = shift;
     my $pdl = zeroes($n,$n);
-    $pdl->diagonal(0,1)++;
+    ++($pdl->diagonal(0,1));
     return $pdl;
 }
 
